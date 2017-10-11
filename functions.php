@@ -43,16 +43,6 @@ function morkovin_sar_remove_x_pingback_header( $headers ) {
    unset( $headers['X-Pingback'] );
    return $headers;
 }
-//Отключаем srcset и sizes для картинок в WordPress
-add_filter('wp_calculate_image_srcset_meta', '__return_null' );
-add_filter('wp_calculate_image_sizes', '__return_false', 99 );
-remove_filter('the_content', 'wp_make_content_images_responsive' );
-add_filter('wp_get_attachment_image_attributes', 'unset_attach_srcset_attr', 99 );
-function unset_attach_srcset_attr( $attr ){
-foreach( array('sizes','srcset') as $key )
-    if( isset($attr[ $key ]) ) unset($attr[ $key ]);
-    return $attr;
-}
 
 include('class.Kama_Make_Thumb.php');
 include('morkovin_recent_posts.php');
@@ -836,24 +826,50 @@ function sample_admin_notice__success() {
     </div>
     <?php
 }
-add_action( 'admin_notices', 'sample_admin_notice__success' );
+add_action( 'admin_notices', 'sample_admin_notice__success' ); 
 
-//Отключаем fancybox на всех страницах, кроме singular
-remove_action('wp_enqueue_scripts', 'mfbfw_scripts');
-remove_action( 'wp_enqueue_scripts', 'mfbfw_styles' );
-remove_action( 'wp_head', 'mfbfw_init' );
-add_action('wp', 'add_fancybox_scripts_single');
-function add_fancybox_scripts_single(){
-    if( is_singular() ){
-        add_action('wp_enqueue_scripts', 'mfbfw_scripts');
-        add_action( 'wp_enqueue_scripts', 'mfbfw_styles' );
-        add_action( 'wp_head', 'mfbfw_init' );
+function morkovin_change_yoast_description($str) { 
+    $term_id = '';
+
+    if ( is_category() ) {
+        $term_id = get_query_var('cat');
     }
-}
+    if ( is_tag() ) {
+        $term_id = get_query_var('tag_id');
+    }
 
-remove_action('wp_enqueue_scripts', 'ratings_scripts');
-add_action('wp', 'add_postrating_scripts_single');
-function add_postrating_scripts_single(){
-    if( is_singular() )
-        add_action('wp_enqueue_scripts', 'ratings_scripts');
-}
+    if ( $term_id != '' ) {
+        if ($str) {
+            return $str;
+        }
+        
+        $morkovin_description = false;
+        $term = get_term($term_id);
+
+        $title_posts = array();
+
+        if ( $term->taxonomy == 'category' ) {
+            $loop = new WP_Query('cat='.$term->term_id.'&posts_per_page=2');
+        }
+        if ( $term->taxonomy == 'post_tag' ) {
+            $loop = new WP_Query('tag_id='.$term->term_id.'&posts_per_page=2');
+        }
+
+        if ( $loop->have_posts() ) {
+            while ( $loop->have_posts() ) { $loop->the_post();
+                $title_posts[] = get_the_title();
+            }
+            $morkovin_description = implode(". ", $title_posts);
+            $morkovin_description = $morkovin_description.'.';
+        } elseif ( $term->description ) {
+            $morkovin_description = wp_trim_words($term->description);
+        }
+        
+        wp_reset_query();
+
+        return $morkovin_description;
+    }
+
+    return $str;
+}; 
+add_filter( 'wpseo_metadesc', 'morkovin_change_yoast_description', 10, 1 ); 

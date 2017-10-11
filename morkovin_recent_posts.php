@@ -121,7 +121,7 @@ class RecentPosts_Morkovin_Widget extends WP_Widget {
 
             wp_reset_postdata();
 
-            $rec_morkovin_posts = "$number<ul>".$rec_morkovin_posts."</ul>";
+            $rec_morkovin_posts = "<ul>".$rec_morkovin_posts."</ul>";
 
             echo $args['before_widget'];
             

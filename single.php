@@ -45,14 +45,12 @@ require('header.php'); ?>
 							<?php
 						} ?>
 
-						<div class="post-meta">
-							<?php if (function_exists('the_ratings')) { 
-								?>
+						<div class="post-meta"><?php
+							if (function_exists('the_ratings')) { ?>
 								<div class="post-rating">
 									<div class="post-rating__title">Оценка статьи:</div>
 									<?php the_ratings(); ?>
-								</div>
-								<?php 
+								</div><?php 
 							} ?>
 							<div class="post-share">
 								<div class="post-share__title">Поделиться с друзьями:</div>
